@@ -1,13 +1,22 @@
+import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
 import TaskModal from "./TaskModal";
 import ConfirmModal from "./ConfirmModal";
 
 export default function TaskCard({ task, columnId, data, setData }) {
-  const { setNodeRef, attributes, listeners, transform, transition } = useSortable({
+  const [editOpen, setEditOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({
     id: task.id,
-    data: { col: columnId },
+    data: { columnId },
   });
 
   const style = {
@@ -15,65 +24,56 @@ export default function TaskCard({ task, columnId, data, setData }) {
     transition,
   };
 
-  const [editOpen, setEditOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-
-  function handleDelete() {
-    const updated = data.columns[columnId].filter((t) => t.id !== task.id);
-    setData({ ...data, columns: { ...data.columns, [columnId]: updated } });
+  const deleteTask = () => {
+    const updated = { ...data };
+    updated.columns[columnId] = updated.columns[columnId].filter(
+      (t) => t.id !== task.id
+    );
+    setData(updated);
     setConfirmOpen(false);
-
-    const status = document.getElementById("aria-status");
-    if (status) status.innerText = "Task deleted successfully";
-  }
+  };
 
   return (
     <div
       ref={setNodeRef}
-      tabIndex={0} // keyboard focusable
       style={style}
-      className={`bg-white p-3 mb-2 rounded shadow border-l-4 transition ${
-        task.priority === "High"
-          ? "border-red-500"
-          : task.priority === "Medium"
-          ? "border-yellow-500"
-          : "border-green-500"
-      }`}
-      {...attributes}
-      {...listeners}
+      className="bg-white p-3 rounded shadow mb-2"
     >
-      <div className="cursor-grab font-semibold mb-1 select-none hover:bg-gray-100 rounded transition">
-        ☰ {task.title}
+      {/* ✅ DRAG AREA ONLY */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab mb-2"
+      >
+        <h3 className="font-bold">{task.title}</h3>
       </div>
 
-      <p className="text-sm text-gray-700">{task.description}</p>
+      {/* NON-DRAG AREA */}
+      <p className="text-sm">{task.description}</p>
+      <p className="text-xs text-gray-500">Assignee: {task.assignee}</p>
+      <p className="text-xs text-gray-500">Priority: {task.priority}</p>
 
-      <div className="flex gap-3 mt-3">
+      {/* BUTTONS */}
+      <div className="flex gap-2 mt-2">
         <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setEditOpen(true);
-          }}
-          className="px-3 py-1 text-sm rounded bg-blue-100 text-blue-700 hover:bg-blue-200"
+          onClick={() => setEditOpen(true)}
+          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
         >
           Edit
         </button>
 
         <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setConfirmOpen(true);
-          }}
-          className="px-3 py-1 text-sm rounded bg-red-100 text-red-700 hover:bg-red-200"
+          onClick={() => setConfirmOpen(true)}
+          className="bg-red-500 text-white px-2 py-1 rounded text-sm"
         >
           Delete
         </button>
       </div>
 
+      {/* MODALS */}
       {editOpen && (
         <TaskModal
+          isNew={false}
           task={task}
           columnId={columnId}
           data={data}
@@ -82,7 +82,12 @@ export default function TaskCard({ task, columnId, data, setData }) {
         />
       )}
 
-      {confirmOpen && <ConfirmModal onYes={handleDelete} onNo={() => setConfirmOpen(false)} />}
+      {confirmOpen && (
+        <ConfirmModal
+          onYes={deleteTask}
+          onNo={() => setConfirmOpen(false)}
+        />
+      )}
     </div>
   );
 }

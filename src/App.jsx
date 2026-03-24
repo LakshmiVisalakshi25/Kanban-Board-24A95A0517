@@ -37,15 +37,20 @@ function normalizeData(saved) {
 
 export default function App() {
   const [data, setData] = useState(() => normalizeData(loadData()));
-  const [filters, setFilters] = useState({ search: "", assignee: "", priority: "" });
+  const [filters, setFilters] = useState({
+    search: "",
+    assignee: "",
+    priority: "",
+  });
   const [showAdd, setShowAdd] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
   );
 
-  // Save all changes to localStorage automatically
   useEffect(() => {
     saveData(data);
   }, [data]);
@@ -62,34 +67,60 @@ export default function App() {
 
     // find source column
     for (const col in data.columns) {
-      if (data.columns[col].some((t) => t.id === activeId)) sourceColumn = col;
+      if (data.columns[col].some((t) => t.id === activeId)) {
+        sourceColumn = col;
+      }
     }
 
-    // dropped on empty column
-    if (data.columns[overId]) destinationColumn = overId;
+    // dropped on column
+    if (data.columns[overId]) {
+      destinationColumn = overId;
+    }
 
-    // dropped on a task
+    // dropped on task
     for (const col in data.columns) {
-      if (data.columns[col].some((t) => t.id === overId)) destinationColumn = col;
+      if (data.columns[col].some((t) => t.id === overId)) {
+        destinationColumn = col;
+      }
     }
 
     if (!sourceColumn || !destinationColumn) return;
 
     if (sourceColumn === destinationColumn) {
       const items = data.columns[sourceColumn];
+
       const oldIndex = items.findIndex((i) => i.id === activeId);
-      const newIndex = items.findIndex((i) => i.id === overId);
+      let newIndex = items.findIndex((i) => i.id === overId);
+
+      // ✅ FIX for empty drop
+      if (newIndex === -1) newIndex = items.length;
+
       const reordered = [...items];
       const [moved] = reordered.splice(oldIndex, 1);
       reordered.splice(newIndex, 0, moved);
 
-      setData({ ...data, columns: { ...data.columns, [sourceColumn]: reordered } });
+      setData({
+        ...data,
+        columns: {
+          ...data.columns,
+          [sourceColumn]: reordered,
+        },
+      });
     } else {
       const fromItems = [...data.columns[sourceColumn]];
       const toItems = [...data.columns[destinationColumn]];
+
       const index = fromItems.findIndex((i) => i.id === activeId);
       const [moved] = fromItems.splice(index, 1);
-      toItems.push(moved);
+
+      const overIndex = toItems.findIndex((i) => i.id === overId);
+
+      // ✅ FIX for empty drop
+      if (overIndex === -1) {
+        toItems.push(moved);
+      } else {
+        toItems.splice(overIndex, 0, moved);
+      }
 
       setData({
         ...data,
@@ -101,7 +132,6 @@ export default function App() {
       });
     }
 
-    // Update ARIA live region for screen readers
     const status = document.getElementById("aria-status");
     if (status) status.innerText = "Task moved successfully";
   }
@@ -110,9 +140,17 @@ export default function App() {
     <div className="min-h-screen bg-gray-100">
       <div id="aria-status" aria-live="polite" className="sr-only"></div>
 
-      <Navbar filters={filters} setFilters={setFilters} onAdd={() => setShowAdd(true)} />
+      <Navbar
+        filters={filters}
+        setFilters={setFilters}
+        onAdd={() => setShowAdd(true)}
+      />
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={onDragEnd}
+      >
         <Board data={data} setData={setData} filters={filters} />
       </DndContext>
 
