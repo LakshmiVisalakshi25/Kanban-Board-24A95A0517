@@ -18,47 +18,56 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
-    // ✅ ROLE FIELD
+    // ROLE FIELD
     role: {
       type: String,
-      enum: ["admin", "member"],
-      default: "member",
+      enum: ["admin", "user"],
+      default: "user",
     },
+
+    // OTP Fields
     otp: {
-  type: String,
-},
+      type: String,
+      default: null,
+    },
 
-otpExpiry: {
-  type: Date,
-},
+    otpExpiry: {
+      type: Date,
+      default: null,
+    },
+
+    // Profile Fields
     bio: {
-  type: String,
-  default: "",
-},
+      type: String,
+      default: "",
+    },
 
-college: {
-  type: String,
-  default: "",
-},
+    college: {
+      type: String,
+      default: "",
+    },
 
-github: {
-  type: String,
-  default: "",
-},
+    github: {
+      type: String,
+      default: "",
+    },
 
-linkedin: {
-  type: String,
-  default: "",
-},
+    linkedin: {
+      type: String,
+      default: "",
+    },
 
-skills: {
-  type: [String],
-  default: [],
-},
+    skills: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,
   }
 );
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model(
+  "User",
+  userSchema
+);
