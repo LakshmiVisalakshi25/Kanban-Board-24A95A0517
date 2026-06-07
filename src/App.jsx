@@ -1,167 +1,39 @@
 import { useEffect, useState } from "react";
-import {
-  DndContext,
-  PointerSensor,
-  KeyboardSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-} from "@dnd-kit/core";
+import { Routes, Route } from "react-router-dom";
+import { DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-
+import { ToastContainer } from "react-toastify";
+import ForgotPassword from "./pages/ForgotPassword";
 import Navbar from "./components/Navbar";
 import Board from "./components/Board";
 import TaskModal from "./components/TaskModal";
-import { loadData, saveData } from "./utils/storage";
-
-const initialData = {
-  columns: {
-    todo: [],
-    progress: [],
-    review: [],
-    done: [],
-  },
-};
-
-function normalizeData(saved) {
-  if (!saved || !saved.columns) return initialData;
-  return {
-    columns: {
-      todo: saved.columns.todo || [],
-      progress: saved.columns.progress || [],
-      review: saved.columns.review || [],
-      done: saved.columns.done || [],
-    },
-  };
-}
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import API from "./services/api";
+import Dashboard from "./components/Dashboard";
+import socket from "./services/socket";
+import DashboardPage from "./pages/DashboardPage";
+import TasksPage from "./pages/TasksPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import CalendarPage from "./pages/CalendarPage";
+import TeamPage from "./pages/TeamPage";
+import ProfilePage from "./pages/ProfilePage";
+import HomePage from "./pages/HomePage";
 
 export default function App() {
-  const [data, setData] = useState(() => normalizeData(loadData()));
-  const [filters, setFilters] = useState({
-    search: "",
-    assignee: "",
-    priority: "",
-  });
-  const [showAdd, setShowAdd] = useState(false);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  useEffect(() => {
-    saveData(data);
-  }, [data]);
-
-  function onDragEnd(event) {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id;
-    const overId = over.id;
-
-    let sourceColumn = null;
-    let destinationColumn = null;
-
-    // find source column
-    for (const col in data.columns) {
-      if (data.columns[col].some((t) => t.id === activeId)) {
-        sourceColumn = col;
-      }
-    }
-
-    // dropped on column
-    if (data.columns[overId]) {
-      destinationColumn = overId;
-    }
-
-    // dropped on task
-    for (const col in data.columns) {
-      if (data.columns[col].some((t) => t.id === overId)) {
-        destinationColumn = col;
-      }
-    }
-
-    if (!sourceColumn || !destinationColumn) return;
-
-    if (sourceColumn === destinationColumn) {
-      const items = data.columns[sourceColumn];
-
-      const oldIndex = items.findIndex((i) => i.id === activeId);
-      let newIndex = items.findIndex((i) => i.id === overId);
-
-      // ✅ FIX for empty drop
-      if (newIndex === -1) newIndex = items.length;
-
-      const reordered = [...items];
-      const [moved] = reordered.splice(oldIndex, 1);
-      reordered.splice(newIndex, 0, moved);
-
-      setData({
-        ...data,
-        columns: {
-          ...data.columns,
-          [sourceColumn]: reordered,
-        },
-      });
-    } else {
-      const fromItems = [...data.columns[sourceColumn]];
-      const toItems = [...data.columns[destinationColumn]];
-
-      const index = fromItems.findIndex((i) => i.id === activeId);
-      const [moved] = fromItems.splice(index, 1);
-
-      const overIndex = toItems.findIndex((i) => i.id === overId);
-
-      // ✅ FIX for empty drop
-      if (overIndex === -1) {
-        toItems.push(moved);
-      } else {
-        toItems.splice(overIndex, 0, moved);
-      }
-
-      setData({
-        ...data,
-        columns: {
-          ...data.columns,
-          [sourceColumn]: fromItems,
-          [destinationColumn]: toItems,
-        },
-      });
-    }
-
-    const status = document.getElementById("aria-status");
-    if (status) status.innerText = "Task moved successfully";
-  }
-
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div id="aria-status" aria-live="polite" className="sr-only"></div>
-
-      <Navbar
-        filters={filters}
-        setFilters={setFilters}
-        onAdd={() => setShowAdd(true)}
-      />
-
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={onDragEnd}
-      >
-        <Board data={data} setData={setData} filters={filters} />
-      </DndContext>
-
-      {showAdd && (
-        <TaskModal
-          isNew
-          data={data}
-          setData={setData}
-          onClose={() => setShowAdd(false)}
-        />
-      )}
-    </div>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="/forgot-password" element={<ForgotPassword />}/>
+      <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+      <Route path="/tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
+      <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+      <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
+      <Route path="/team" element={<ProtectedRoute><TeamPage /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+    </Routes>
   );
 }

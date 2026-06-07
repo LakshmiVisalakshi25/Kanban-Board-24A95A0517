@@ -6,3 +6,94 @@
 body {
 @apply bg-gray-100 text-gray-800;
 }
+/* CALENDAR DARK MODE */
+
+.dark .react-calendar {
+  background: #1f2937;
+  color: white;
+  border: none;
+}
+
+.dark .react-calendar__tile {
+  color: white;
+}
+
+.dark .react-calendar__navigation button {
+  color: white;
+}
+
+.dark .react-calendar__tile--active {
+  background: #2563eb;
+  color: white;
+}
+
+.dark .react-calendar__month-view__days__day--weekend {
+  color: #f87171;
+}
+
+.dark .react-calendar__tile:enabled:hover {
+  background: #374151;
+}
+/* Dates having tasks */
+.task-date {
+  background: #3b82f6 !important;
+  color: white !important;
+  border-radius: 50%;
+  font-weight: bold;
+}
+
+/* Hover effect */
+.task-date:hover {
+  background: #2563eb !important;
+}
+
+/* Selected date */
+.react-calendar__tile--active {
+  background: #1d4ed8 !important;
+  color: white !important;
+}
+
+/* Today's date */
+.react-calendar__tile--now {
+  background: #facc15 !important;
+  color: black !important;
+  border-radius: 50%;
+}
+/* Default task */
+.calendar-task {
+  background: #3b82f6 !important;
+  color: white !important;
+  border-radius: 50%;
+}
+
+/* Overdue */
+.calendar-overdue {
+  background: #ef4444 !important;
+  color: white !important;
+  border-radius: 50%;
+}
+
+/* Completed */
+.calendar-completed {
+  background: #22c55e !important;
+  color: white !important;
+  border-radius: 50%;
+}
+
+/* High Priority */
+.calendar-high {
+  background: #f97316 !important;
+  color: white !important;
+  border-radius: 50%;
+}
+
+/* Today */
+.react-calendar__tile--now {
+  background: #facc15 !important;
+  border-radius: 50%;
+}
+
+.react-calendar__tile--active {
+  background: #1d4ed8 !important;
+  color: white !important;
+}

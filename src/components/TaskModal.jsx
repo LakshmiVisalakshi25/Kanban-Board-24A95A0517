@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import API from "../services/api";
+
+import { toast } from "react-toastify";
 
 export default function TaskModal({
   isNew = true,
   task,
   columnId,
-  data,
-  setData,
+  fetchTasks,
   onClose,
 }) {
+  // COLUMNS
   const columns = [
     { id: "todo", title: "To Do" },
     { id: "progress", title: "In Progress" },
@@ -15,148 +19,377 @@ export default function TaskModal({
     { id: "done", title: "Done" },
   ];
 
-  const assignees = ["Lakshmi", "Team"];
-  const priorities = ["Low", "Medium", "High"];
+  // PRIORITIES
+  const priorities = [
+    "Low",
+    "Medium",
+    "High",
+  ];
 
-  const [title, setTitle] = useState(task?.title || "");
-  const [description, setDescription] = useState(task?.description || "");
-  const [assignee, setAssignee] = useState(task?.assignee || assignees[0]);
-  const [priority, setPriority] = useState(task?.priority || priorities[0]);
-  const [column, setColumn] = useState(columnId || columns[0].id);
-  const [error, setError] = useState("");
+  // USERS
+  const [users, setUsers] =
+    useState([]);
 
-  function handleSubmit(e) {
-  e.preventDefault();
-
-  if (!title || !description || !assignee || !priority || !column) {
-    setError("All fields are required.");
-    return;
-  }
-
-  const newTask = {
-    id: task?.id || Date.now().toString(),
-    title,
-    description,
-    assignee,
-    priority,
-  };
-
-  const updatedColumns = { ...data.columns };
-
-  if (!task) {
-    updatedColumns[column] = [...updatedColumns[column], newTask];
-  } else {
-    updatedColumns[columnId] = updatedColumns[columnId].map((t) =>
-      t.id === task.id ? newTask : t
+  // FORM STATES
+  const [title, setTitle] =
+    useState(
+      task?.title || ""
     );
+
+  const [
+    description,
+    setDescription,
+  ] = useState(
+    task?.description || ""
+  );
+
+  const [assignee, setAssignee] =
+    useState(
+      task?.isTeamTask
+        ? "team"
+        : task?.assignee
+            ?._id || ""
+    );
+
+  const [priority, setPriority] =
+    useState(
+      task?.priority ||
+        priorities[0]
+    );
+
+  const [dueDate, setDueDate] =
+    useState(
+      task?.dueDate
+        ? new Date(
+            task.dueDate
+          )
+            .toISOString()
+            .split("T")[0]
+        : ""
+    );
+
+  const [column, setColumn] =
+    useState(
+      task?.status ||
+        columnId ||
+        columns[0].id
+    );
+
+  const [error, setError] =
+    useState("");
+
+  // FETCH USERS
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  async function fetchUsers() {
+    try {
+      const res = await API.get(
+        "/auth/users"
+      );
+
+      setUsers(res.data);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  setData({
-    ...data,
-    columns: updatedColumns,
-  });
+  // SUBMIT
+  async function handleSubmit(
+    e
+  ) {
+    e.preventDefault();
 
-  onClose();
-}
+    setError("");
+
+    // VALIDATION
+    if (
+      !title.trim() ||
+      !description.trim() ||
+      !priority ||
+      !dueDate ||
+      !assignee
+    ) {
+      setError(
+        "Please fill all fields."
+      );
+
+      return;
+    }
+
+    try {
+      const taskData = {
+        title:
+          title.trim(),
+
+        description:
+          description.trim(),
+
+        priority,
+
+        dueDate,
+
+        status: column,
+
+        // TEAM TASK
+        isTeamTask:
+          assignee ===
+          "team",
+
+        // USER TASK
+        assignee:
+          assignee ===
+          "team"
+            ? null
+            : assignee,
+      };
+
+      // CREATE
+      if (!task) {
+        await API.post(
+          "/tasks",
+          taskData
+        );
+
+        toast.success(
+          "Task Added Successfully"
+        );
+      }
+
+      // UPDATE
+      else {
+        await API.put(
+          `/tasks/${task._id}`,
+          taskData
+        );
+
+        toast.success(
+          "Task Updated Successfully"
+        );
+      }
+
+      fetchTasks();
+
+      onClose();
+    } catch (error) {
+      console.log(error);
+
+      toast.error(
+        error.response?.data
+          ?.message ||
+          "Something went wrong"
+      );
+    }
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+
       <form
-        className="bg-white p-6 rounded shadow-lg w-96"
-        onSubmit={handleSubmit}
+        onSubmit={
+          handleSubmit
+        }
+        className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded shadow-lg w-96"
       >
-        <h2 className="text-lg font-bold mb-4">
-          {isNew ? "Add Task" : "Edit Task"}
+
+        <h2 className="text-xl font-bold mb-4">
+          {isNew
+            ? "Add Task"
+            : "Edit Task"}
         </h2>
 
-        {error && <p className="text-red-500 mb-2">{error}</p>}
-
-        {/* Title */}
-        <div className="mb-3">
-          <label className="block mb-1 font-medium">Title</label>
-          <input
-            type="text"
-            className="w-full border px-2 py-1 rounded"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-        </div>
-
-        {/* Description */}
-        <div className="mb-3">
-          <label className="block mb-1 font-medium">Description</label>
-          <textarea
-            className="w-full border px-2 py-1 rounded"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        {/* Assignee */}
-        <div className="mb-3">
-          <label className="block mb-1 font-medium">Assignee</label>
-          <select
-            className="w-full border px-2 py-1 rounded"
-            value={assignee}
-            onChange={(e) => setAssignee(e.target.value)}
-          >
-            {assignees.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Priority */}
-        <div className="mb-3">
-          <label className="block mb-1 font-medium">Priority</label>
-          <select
-            className="w-full border px-2 py-1 rounded"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-          >
-            {priorities.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Column (ONLY for Add) */}
-        {isNew && (
-          <div className="mb-3">
-            <label className="block mb-1 font-medium">Column</label>
-            <select
-              className="w-full border px-2 py-1 rounded"
-              value={column}
-              onChange={(e) => setColumn(e.target.value)}
-            >
-              {columns.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* ERROR */}
+        {error && (
+          <p className="text-red-500 mb-3">
+            {error}
+          </p>
         )}
 
-        {/* Buttons */}
-        <div className="flex justify-end gap-2 mt-4">
+        {/* TITLE */}
+        <div className="mb-3">
+          <label className="block mb-1 font-medium">
+            Title
+          </label>
+
+          <input
+            type="text"
+            required
+            value={title}
+            onChange={(e) =>
+              setTitle(
+                e.target.value
+              )
+            }
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+          />
+        </div>
+
+        {/* DESCRIPTION */}
+        <div className="mb-3">
+          <label className="block mb-1 font-medium">
+            Description
+          </label>
+
+          <textarea
+            required
+            rows={3}
+            value={
+              description
+            }
+            onChange={(e) =>
+              setDescription(
+                e.target.value
+              )
+            }
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+          />
+        </div>
+
+        {/* ASSIGNEE */}
+        <div className="mb-3">
+          <label className="block mb-1 font-medium">
+            Assignee
+          </label>
+
+          <select
+            required
+            value={assignee}
+            onChange={(e) =>
+              setAssignee(
+                e.target.value
+              )
+            }
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+          >
+            <option value="">
+              Select Assignee
+            </option>
+
+            <option value="team">
+              Assign to All
+            </option>
+
+            {users.map(
+              (user) => (
+                <option
+                  key={
+                    user._id
+                  }
+                  value={
+                    user._id
+                  }
+                >
+                  {user.name}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+
+        {/* PRIORITY */}
+        <div className="mb-3">
+          <label className="block mb-1 font-medium">
+            Priority
+          </label>
+
+          <select
+            value={
+              priority
+            }
+            onChange={(e) =>
+              setPriority(
+                e.target.value
+              )
+            }
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+          >
+            {priorities.map(
+              (p) => (
+                <option
+                  key={p}
+                  value={p}
+                >
+                  {p}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+
+        {/* DUE DATE */}
+        <div className="mb-3">
+          <label className="block mb-1 font-medium">
+            Due Date
+          </label>
+
+          <input
+            type="date"
+            required
+            value={dueDate}
+            onChange={(e) =>
+              setDueDate(
+                e.target.value
+              )
+            }
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+          />
+        </div>
+
+        {/* STATUS */}
+        <div className="mb-4">
+          <label className="block mb-1 font-medium">
+            Column
+          </label>
+
+          <select
+            value={column}
+            onChange={(e) =>
+              setColumn(
+                e.target.value
+              )
+            }
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+          >
+            {columns.map(
+              (col) => (
+                <option
+                  key={
+                    col.id
+                  }
+                  value={
+                    col.id
+                  }
+                >
+                  {
+                    col.title
+                  }
+                </option>
+              )
+            )}
+          </select>
+        </div>
+
+        {/* BUTTONS */}
+        <div className="flex justify-end gap-3">
+
           <button
             type="button"
-            className="px-4 py-2 rounded bg-gray-200"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
+            className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-600"
           >
             Cancel
           </button>
 
           <button
             type="submit"
-            className="px-4 py-2 rounded bg-blue-500 text-white"
+            className="px-4 py-2 rounded bg-blue-500 hover:bg-blue-600 text-white"
           >
-            {isNew ? "Add" : "Save"}
+            {isNew
+              ? "Add"
+              : "Save"}
           </button>
         </div>
       </form>

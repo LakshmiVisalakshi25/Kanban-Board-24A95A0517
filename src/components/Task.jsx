@@ -1,66 +1,41 @@
-import { useState } from "react";
-import TaskModal from "./TaskModal";
-import ConfirmModal from "./ConfirmModal";
+const mongoose = require("mongoose");
 
-export default function Task({ task, data, setData }) {
-  const [editOpen, setEditOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+const taskSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
 
-  const deleteTask = () => {
-    const updatedColumns = {};
+    description: {
+      type: String,
+      required: true,
+    },
 
-    Object.keys(data.columns).forEach((colId) => {
-      updatedColumns[colId] = data.columns[colId].filter(
-        (t) => t.id !== task.id
-      );
-    });
+    assignee: {
+      type: String,
+      required: true,
+    },
 
-    setData({
-      ...data,
-      columns: updatedColumns,
-    });
+    priority: {
+      type: String,
+      required: true,
+    },
 
-    setConfirmOpen(false);
-  };
+    // ✅ NEW DUE DATE FIELD
+    dueDate: {
+      type: String,
+    },
 
-  return (
-    <div className="bg-white p-3 rounded shadow mb-2">
-      <h3 className="font-bold">{task.title}</h3>
-      <p className="text-sm">{task.description}</p>
-      <p className="text-xs text-gray-500">Assignee: {task.assignee}</p>
-      <p className="text-xs text-gray-500">Priority: {task.priority}</p>
+    status: {
+      type: String,
+      enum: ["todo", "progress", "review", "done"],
+      default: "todo",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-      <div className="flex gap-2 mt-2">
-        <button
-          onClick={() => setEditOpen(true)}
-          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-        >
-          Edit
-        </button>
-
-        <button
-          onClick={() => setConfirmOpen(true)}
-          className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-        >
-          Delete
-        </button>
-      </div>
-
-      {editOpen && (
-        <TaskModal
-          task={task}
-          data={data}
-          setData={setData}
-          close={() => setEditOpen(false)}
-        />
-      )}
-
-      {confirmOpen && (
-        <ConfirmModal
-          onYes={deleteTask}
-          onNo={() => setConfirmOpen(false)}
-        />
-      )}
-    </div>
-  );
-}
+module.exports = mongoose.model("Task", taskSchema);

@@ -1,13 +1,46 @@
 import { useState } from "react";
-import { useSortable } from "@dnd-kit/sortable";
+
+import {
+  useSortable,
+} from "@dnd-kit/sortable";
+
 import { CSS } from "@dnd-kit/utilities";
+
+import {
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
+
 import TaskModal from "./TaskModal";
+
 import ConfirmModal from "./ConfirmModal";
 
-export default function TaskCard({ task, columnId, data, setData }) {
-  const [editOpen, setEditOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+import CommentsModal from "./CommentsModal";
 
+import API from "../services/api";
+
+import { toast } from "react-toastify";
+
+export default function TaskCard({
+  task,
+  fetchTasks,
+}) {
+  // CURRENT USER
+  const currentUser = JSON.parse(
+    localStorage.getItem("user")
+  );
+
+  // MODALS
+  const [showEdit, setShowEdit] =
+    useState(false);
+
+  const [showDelete, setShowDelete] =
+    useState(false);
+
+  const [showComments, setShowComments] =
+    useState(false);
+
+  // DRAG
   const {
     attributes,
     listeners,
@@ -15,79 +48,180 @@ export default function TaskCard({ task, columnId, data, setData }) {
     transform,
     transition,
   } = useSortable({
-    id: task.id,
-    data: { columnId },
+    id: task._id,
   });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform:
+      CSS.Transform.toString(
+        transform
+      ),
+
     transition,
   };
 
-  const deleteTask = () => {
-    const updated = { ...data };
-    updated.columns[columnId] = updated.columns[columnId].filter(
-      (t) => t.id !== task.id
-    );
-    setData(updated);
-    setConfirmOpen(false);
-  };
+  // DELETE
+  async function deleteTask() {
+    try {
+      await API.delete(
+        `/tasks/${task._id}`
+      );
+
+      toast.success(
+        "Task Deleted"
+      );
+
+      fetchTasks();
+    } catch (error) {
+      console.log(error);
+
+      toast.error(
+        "Delete failed"
+      );
+    }
+  }
+
+  // OVERDUE
+  const isOverdue =
+    task.dueDate &&
+    new Date(task.dueDate) <
+      new Date() &&
+    task.status !== "done";
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="bg-white p-3 rounded shadow mb-2"
-    >
-      {/* ✅ DRAG AREA ONLY */}
+    <>
+      {/* CARD */}
       <div
+        ref={setNodeRef}
+        style={style}
         {...attributes}
         {...listeners}
-        className="cursor-grab mb-2"
+        className={`bg-white dark:bg-gray-800 dark:text-white p-4 rounded shadow cursor-grab transition-all duration-300 hover:shadow-lg ${
+          isOverdue
+            ? "border-l-4 border-red-500"
+            : ""
+        }`}
       >
-        <h3 className="font-bold">{task.title}</h3>
+        
+        {/* HEADER */}
+        <div className="flex justify-between items-start mb-2">
+          
+          <h3 className="font-bold text-lg">
+            {task.title}
+          </h3>
+
+          {/* ADMIN ONLY */}
+          {currentUser?.role ===
+            "admin" && (
+            <div className="flex gap-2">
+              
+              {/* EDIT */}
+              <button
+                onClick={() =>
+                  setShowEdit(true)
+                }
+                className="text-blue-500 hover:text-blue-700"
+              >
+                <FaEdit />
+              </button>
+
+              {/* DELETE */}
+              <button
+                onClick={() =>
+                  setShowDelete(
+                    true
+                  )
+                }
+                className="text-red-500 hover:text-red-700"
+              >
+                <FaTrash />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* DESCRIPTION */}
+        <p className="text-sm mb-3">
+          {task.description}
+        </p>
+
+        {/* ASSIGNEE */}
+        <p className="text-sm mb-1">
+          <span className="font-semibold">
+            Assigned To:
+          </span>{" "}
+          {task.isTeamTask
+            ? "All Users"
+            : task.assignee?.name}
+        </p>
+
+        {/* PRIORITY */}
+        <p className="text-sm mb-1">
+          <span className="font-semibold">
+            Priority:
+          </span>{" "}
+          {task.priority}
+        </p>
+
+        {/* DUE DATE */}
+        <p
+          className={`text-sm ${
+            isOverdue
+              ? "text-red-500 font-bold"
+              : ""
+          }`}
+        >
+          <span className="font-semibold">
+            Due:
+          </span>{" "}
+          {task.dueDate ||
+            "No Date"}
+        </p>
+
+        {/* COMMENTS BUTTON */}
+        <button
+          onClick={() =>
+            setShowComments(true)
+          }
+          className="mt-3 bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+        >
+          Open Chat
+        </button>
       </div>
 
-      {/* NON-DRAG AREA */}
-      <p className="text-sm">{task.description}</p>
-      <p className="text-xs text-gray-500">Assignee: {task.assignee}</p>
-      <p className="text-xs text-gray-500">Priority: {task.priority}</p>
-
-      {/* BUTTONS */}
-      <div className="flex gap-2 mt-2">
-        <button
-          onClick={() => setEditOpen(true)}
-          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-        >
-          Edit
-        </button>
-
-        <button
-          onClick={() => setConfirmOpen(true)}
-          className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-        >
-          Delete
-        </button>
-      </div>
-
-      {/* MODALS */}
-      {editOpen && (
+      {/* EDIT */}
+      {showEdit && (
         <TaskModal
-          isNew={false}
           task={task}
-          columnId={columnId}
-          data={data}
-          setData={setData}
-          onClose={() => setEditOpen(false)}
+          fetchTasks={fetchTasks}
+          onClose={() =>
+            setShowEdit(false)
+          }
         />
       )}
 
-      {confirmOpen && (
+      {/* DELETE */}
+      {showDelete && (
         <ConfirmModal
-          onYes={deleteTask}
-          onNo={() => setConfirmOpen(false)}
+          title="Delete Task"
+          message="Are you sure you want to delete this task?"
+          onConfirm={deleteTask}
+          onCancel={() =>
+            setShowDelete(false)
+          }
         />
       )}
-    </div>
+
+      {/* COMMENTS */}
+      {showComments && (
+        <CommentsModal
+          task={task}
+          fetchTasks={fetchTasks}
+          onClose={() =>
+            setShowComments(false)
+          }
+        />
+      )}
+    </>
   );
 }

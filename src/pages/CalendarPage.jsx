@@ -1,0 +1,284 @@
+import { useEffect, useState } from "react";
+
+import Calendar from "react-calendar";
+
+import "react-calendar/dist/Calendar.css";
+
+import Sidebar from "../components/Sidebar";
+
+import API from "../services/api";
+
+export default function CalendarPage() {
+  // TASKS
+  const [tasks, setTasks] =
+    useState([]);
+
+  // DATE
+  const [selectedDate, setSelectedDate] =
+    useState(new Date());
+
+  // FETCH TASKS
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  async function fetchTasks() {
+    try {
+      const res = await API.get(
+        "/tasks"
+      );
+
+      console.log(
+        "Calendar Tasks:",
+        res.data
+      );
+
+      setTasks(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  // SELECTED DATE
+  const selected =
+  `${selectedDate.getFullYear()}-${
+    String(
+      selectedDate.getMonth() + 1
+    ).padStart(2, "0")
+  }-${
+    String(
+      selectedDate.getDate()
+    ).padStart(2, "0")
+  }`;
+
+  // FILTER TASKS
+  const filteredTasks =
+    tasks.filter((task) => {
+      // IGNORE TASKS WITHOUT DUE DATE
+      if (!task.dueDate) {
+        return false;
+      }
+
+      // CONVERT TASK DATE
+     const taskDueDate =
+  new Date(task.dueDate);
+
+const taskDate =
+  `${taskDueDate.getFullYear()}-${
+    String(
+      taskDueDate.getMonth() + 1
+    ).padStart(2, "0")
+  }-${
+    String(
+      taskDueDate.getDate()
+    ).padStart(2, "0")
+  }`;
+
+      // MATCH DATES
+      return (
+        taskDate === selected
+      );
+    });
+
+  return (
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 dark:text-white">
+      
+      {/* SIDEBAR */}
+      <Sidebar />
+
+      {/* MAIN */}
+      <div className="flex-1 p-6">
+        
+        {/* TITLE */}
+        <h1 className="text-3xl font-bold mb-6">
+          Calendar
+        </h1>
+
+        {/* CALENDAR */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded shadow mb-6">
+          
+         <Calendar
+  onChange={setSelectedDate}
+  value={selectedDate}
+
+  tileClassName={({
+    date,
+    view,
+  }) => {
+    if (
+      view !== "month"
+    )
+      return null;
+
+    const formattedDate =
+      `${date.getFullYear()}-${String(
+        date.getMonth() +
+          1
+      ).padStart(
+        2,
+        "0"
+      )}-${String(
+        date.getDate()
+      ).padStart(
+        2,
+        "0"
+      )}`;
+
+    const task =
+      tasks.find((t) => {
+        if (
+          !t.dueDate
+        )
+          return false;
+
+        const taskDate =
+          new Date(
+            t.dueDate
+          );
+
+        const formattedTask =
+          `${taskDate.getFullYear()}-${String(
+            taskDate.getMonth() +
+              1
+          ).padStart(
+            2,
+            "0"
+          )}-${String(
+            taskDate.getDate()
+          ).padStart(
+            2,
+            "0"
+          )}`;
+
+        return (
+          formattedTask ===
+          formattedDate
+        );
+      });
+
+    if (!task)
+      return null;
+
+    const today =
+      new Date();
+
+    const dueDate =
+      new Date(
+        task.dueDate
+      );
+
+    // Overdue
+    if (
+      dueDate <
+        today &&
+      task.status !==
+        "done"
+    ) {
+      return "calendar-overdue";
+    }
+
+    // Completed
+    if (
+      task.status ===
+      "done"
+    ) {
+      return "calendar-completed";
+    }
+
+    // High Priority
+    if (
+      task.priority ===
+      "High"
+    ) {
+      return "calendar-high";
+    }
+
+    return "calendar-task";
+  }}
+/>
+        </div>
+
+        {/* TASKS */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded shadow">
+          
+          <h2 className="text-2xl font-bold mb-4">
+            Tasks on{" "}
+            {selected}
+          </h2>
+
+          {filteredTasks.length ===
+          0 ? (
+            <p className="text-gray-500">
+              No tasks for this
+              date
+            </p>
+          ) : (
+            <div className="space-y-4">
+              
+              {filteredTasks.map(
+                (task) => (
+                  <div
+                    key={
+                      task._id
+                    }
+                    className="border dark:border-gray-600 p-4 rounded"
+                  >
+                    
+                    {/* TITLE */}
+                    <h3 className="font-bold text-lg">
+                      {
+                        task.title
+                      }
+                    </h3>
+
+                    {/* DESCRIPTION */}
+                    <p className="mt-2">
+                      {
+                        task.description
+                      }
+                    </p>
+
+                    {/* ASSIGNEE */}
+                    <p className="text-sm text-gray-500 mt-2">
+                      Assignee:{" "}
+                      {task.isTeamTask
+                        ? "All Users"
+                        : task
+                            .assignee
+                            ?.name ||
+                          "Unassigned"}
+                    </p>
+
+                    {/* PRIORITY */}
+                    <p className="text-sm text-gray-500">
+                      Priority:{" "}
+                      {
+                        task.priority
+                      }
+                    </p>
+
+                    {/* STATUS */}
+                    <p className="text-sm text-gray-500">
+                      Status:{" "}
+                      {
+                        task.status
+                      }
+                    </p>
+
+                    {/* DUE DATE */}
+                    <p className="text-sm text-gray-500">
+                      Due Date:{" "}
+                      {new Date(
+                        task.dueDate
+                      ).toLocaleDateString()}
+                    </p>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
