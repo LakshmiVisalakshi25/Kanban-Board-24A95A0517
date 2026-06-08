@@ -86,9 +86,7 @@ export default function Sidebar() {
   const SidebarContent = ({ onClose }) => (
     <div
       style={{
-        height: "100%",
-        minHeight: "100vh",
-        overflowY: "auto",
+        height: "100vh",
         backgroundColor: "#111827",
         display: "flex",
         flexDirection: "column",
@@ -109,8 +107,11 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* MIDDLE: Nav links */}
-      <nav style={{ flex: 1 }} className="px-5 pb-4 space-y-1">
+      {/* MIDDLE: Nav links — only this section scrolls if needed */}
+      <nav
+        style={{ flex: 1, overflowY: "auto" }}
+        className="px-5 pb-4 space-y-1"
+      >
         {navLinks.map(({ to, icon, label }) => (
           <Link key={to} to={to} className={menuStyle(to)}>
             <span className="text-base flex-shrink-0">{icon}</span>
@@ -119,12 +120,10 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* BOTTOM: Dark mode + Logout — sticky at bottom */}
+      {/* BOTTOM: Always pinned — never scrolls away */}
       <div
         style={{
           flexShrink: 0,
-          position: "sticky",
-          bottom: 0,
           backgroundColor: "#111827",
           borderTop: "1px solid #374151",
           padding: "16px 20px",
@@ -196,7 +195,7 @@ export default function Sidebar() {
         <SidebarContent onClose={() => setIsOpen(false)} />
       </div>
 
-      {/* ── DESKTOP SIDEBAR — fixed, full height, never scrolls with page ── */}
+      {/* ── DESKTOP SIDEBAR ── */}
       <div
         className="hidden md:block"
         style={{
@@ -205,10 +204,8 @@ export default function Sidebar() {
           left: 0,
           zIndex: 30,
           width: "256px",
-          height: "100%",
-          minHeight: "100vh",
+          height: "100vh",
           backgroundColor: "#111827",
-          overflowY: "auto",
         }}
       >
         <SidebarContent />
