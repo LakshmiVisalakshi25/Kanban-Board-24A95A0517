@@ -31,7 +31,13 @@ io.on("connection", (socket) => {
 });
 
 // MIDDLEWARE
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://kanban-board-lemon-sigma.vercel.app", // your vercel frontend
+  ],
+  credentials: true,
+}));
 
 app.use(express.json());
 
