@@ -12,20 +12,15 @@ import {
   FaTimes,
 } from "react-icons/fa";
 
-import { Link, useNavigate } from "react-router-dom";
-
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 export default function Sidebar() {
   const navigate = useNavigate();
-
-  // DRAWER
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-
-  // USER
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // DARK MODE
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem("theme") === "dark";
   });
@@ -40,7 +35,25 @@ export default function Sidebar() {
     }
   }, [darkMode]);
 
-  // LOGOUT
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) setIsOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -48,134 +61,164 @@ export default function Sidebar() {
     navigate("/", { replace: true });
   }
 
+  const isActive = (path) => location.pathname === path;
+
+  const menuStyle = (path) =>
+    `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm font-medium ${
+      isActive(path)
+        ? "bg-blue-600 text-white shadow-md"
+        : "text-gray-300 hover:bg-gray-800 hover:text-blue-400"
+    }`;
+
+  const navLinks = [
+    { to: "/dashboard", icon: <FaTachometerAlt />, label: "Dashboard" },
+    { to: "/tasks",     icon: <FaTasks />,         label: "Tasks" },
+    ...(user?.role === "admin"
+      ? [{ to: "/analytics", icon: <FaChartPie />, label: "Analytics" }]
+      : []),
+    { to: "/calendar",  icon: <FaCalendarAlt />,   label: "Calendar" },
+    ...(user?.role === "admin"
+      ? [{ to: "/team", icon: <FaUsers />, label: "Team" }]
+      : []),
+    { to: "/profile",   icon: <FaUser />,          label: "Profile" },
+  ];
+
+  const SidebarContent = ({ onClose }) => (
+    <div
+      style={{
+        height: "100%",
+        minHeight: "100vh",
+        overflowY: "auto",
+        backgroundColor: "#111827",
+        display: "flex",
+        flexDirection: "column",
+      }}
+      className="text-white w-64"
+    >
+      {/* TOP: Logo + Close */}
+      <div className="flex items-center justify-between px-5 py-5 flex-shrink-0">
+        <h1 className="text-xl font-bold tracking-tight">Kanban SaaS</h1>
+        {onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Close menu"
+            className="p-1.5 rounded-lg hover:bg-gray-800 transition text-lg text-gray-300"
+          >
+            <FaTimes />
+          </button>
+        )}
+      </div>
+
+      {/* MIDDLE: Nav links */}
+      <nav style={{ flex: 1 }} className="px-5 pb-4 space-y-1">
+        {navLinks.map(({ to, icon, label }) => (
+          <Link key={to} to={to} className={menuStyle(to)}>
+            <span className="text-base flex-shrink-0">{icon}</span>
+            <span className="truncate">{label}</span>
+          </Link>
+        ))}
+      </nav>
+
+      {/* BOTTOM: Dark mode + Logout — sticky at bottom */}
+      <div
+        style={{
+          flexShrink: 0,
+          position: "sticky",
+          bottom: 0,
+          backgroundColor: "#111827",
+          borderTop: "1px solid #374151",
+          padding: "16px 20px",
+        }}
+        className="space-y-1"
+      >
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-yellow-400 transition-all duration-200 text-sm font-medium"
+        >
+          <span className="text-base flex-shrink-0">
+            {darkMode ? <FaSun /> : <FaMoon />}
+          </span>
+          <span>{darkMode ? "Light Mode" : "Dark Mode"}</span>
+        </button>
+
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-red-400 transition-all duration-200 text-sm font-medium"
+        >
+          <span className="text-base flex-shrink-0">
+            <FaSignOutAlt />
+          </span>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <>
-      {/* MOBILE HEADER */}
-      <div className="md:hidden flex justify-between items-center bg-gray-900 text-white p-4">
-        <h1 className="text-xl font-bold">Kanban SaaS</h1>
-        <button onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+      {/* ── MOBILE TOP BAR ── */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-gray-900 text-white flex items-center justify-between px-4 z-50 shadow-lg">
+        <h1 className="text-lg font-bold tracking-tight">Kanban SaaS</h1>
+        <button
+          onClick={() => setIsOpen(true)}
+          aria-label="Open menu"
+          className="p-2 rounded-lg hover:bg-gray-800 transition text-xl"
+        >
+          <FaBars />
         </button>
       </div>
 
-      {/* OVERLAY — closes drawer when tapping outside */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {/* SIDEBAR */}
+      {/* ── BACKDROP (mobile only) ── */}
       <div
-        className={`
-          fixed md:static
-          top-0 left-0 z-50
-          w-64 min-h-screen
-          bg-gray-900 text-white p-5
-          flex flex-col justify-between
-          transform transition-transform duration-300
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0
-        `}
+        className={`fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300 ${
+          isOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setIsOpen(false)}
+        aria-hidden="true"
+      />
+
+      {/* ── MOBILE DRAWER ── */}
+      <div
+        className="md:hidden"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          zIndex: 60,
+          width: "256px",
+          height: "100vh",
+          transform: isOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.3s ease-in-out",
+        }}
       >
-        {/* TOP */}
-        <div>
-
-          {/* LOGO */}
-          <h1 className="text-2xl font-bold mb-10">Kanban SaaS</h1>
-
-          {/* MENU */}
-          <div className="space-y-5">
-
-            {/* DASHBOARD */}
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-3 hover:text-blue-400 transition"
-              onClick={() => setIsOpen(false)}
-            >
-              <FaTachometerAlt />
-              Dashboard
-            </Link>
-
-            {/* TASKS */}
-            <Link
-              to="/tasks"
-              className="flex items-center gap-3 hover:text-blue-400 transition"
-              onClick={() => setIsOpen(false)}
-            >
-              <FaTasks />
-              Tasks
-            </Link>
-
-            {/* ANALYTICS - ADMIN ONLY */}
-            {user?.role === "admin" && (
-              <Link
-                to="/analytics"
-                className="flex items-center gap-3 hover:text-blue-400 transition"
-                onClick={() => setIsOpen(false)}
-              >
-                <FaChartPie />
-                Analytics
-              </Link>
-            )}
-
-            {/* CALENDAR */}
-            <Link
-              to="/calendar"
-              className="flex items-center gap-3 hover:text-blue-400 transition"
-              onClick={() => setIsOpen(false)}
-            >
-              <FaCalendarAlt />
-              Calendar
-            </Link>
-
-            {/* TEAM - ADMIN ONLY */}
-            {user?.role === "admin" && (
-              <Link
-                to="/team"
-                className="flex items-center gap-3 hover:text-blue-400 transition"
-                onClick={() => setIsOpen(false)}
-              >
-                <FaUsers />
-                Team
-              </Link>
-            )}
-
-            {/* PROFILE */}
-            <Link
-              to="/profile"
-              className="flex items-center gap-3 hover:text-blue-400 transition"
-              onClick={() => setIsOpen(false)}
-            >
-              <FaUser />
-              Profile
-            </Link>
-          </div>
-        </div>
-
-        {/* BOTTOM */}
-        <div className="space-y-5">
-
-          {/* THEME TOGGLE */}
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="flex items-center gap-3 hover:text-yellow-400 transition"
-          >
-            {darkMode ? <FaSun /> : <FaMoon />}
-            {darkMode ? "Light Mode" : "Dark Mode"}
-          </button>
-
-          {/* LOGOUT */}
-          <button
-            onClick={logout}
-            className="flex items-center gap-3 hover:text-red-400 transition"
-          >
-            <FaSignOutAlt />
-            Logout
-          </button>
-        </div>
+        <SidebarContent onClose={() => setIsOpen(false)} />
       </div>
+
+      {/* ── DESKTOP SIDEBAR — fixed, full height, never scrolls with page ── */}
+      <div
+        className="hidden md:block"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          zIndex: 30,
+          width: "256px",
+          height: "100%",
+          minHeight: "100vh",
+          backgroundColor: "#111827",
+          overflowY: "auto",
+        }}
+      >
+        <SidebarContent />
+      </div>
+
+      {/* ── DESKTOP SPACER ── */}
+      <div className="hidden md:block flex-shrink-0" style={{ width: "256px" }} />
+
+      {/* ── MOBILE SPACER ── */}
+      <div className="md:hidden" style={{ height: "56px" }} />
     </>
   );
 }

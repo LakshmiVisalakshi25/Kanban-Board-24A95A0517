@@ -19,23 +19,39 @@ export default function Board({
   fetchTasks,
 }) {
   return (
-    <div className="grid md:grid-cols-4 gap-4 p-4">
-      {columns.map((col) => (
-        <SortableContext
-          key={col.id}
-          items={data.columns[col.id].map((t) => t._id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <Column
-            column={col}
-            tasks={data.columns[col.id]}
-            data={data}
-            setData={setData}
-            filters={filters}
-            fetchTasks={fetchTasks}
-          />
-        </SortableContext>
-      ))}
+    <div className="overflow-x-auto pb-4">
+      <div className="flex gap-4 w-max">
+
+        {columns.map((col) => (
+          <div
+            key={col.id}
+            className="
+              w-[330px]
+              sm:w-[350px]
+              flex-shrink-0
+            "
+          >
+            <SortableContext
+              items={data.columns[col.id].map(
+                (t) => t._id
+              )}
+              strategy={
+                verticalListSortingStrategy
+              }
+            >
+              <Column
+                column={col}
+                tasks={data.columns[col.id]}
+                data={data}
+                setData={setData}
+                filters={filters}
+                fetchTasks={fetchTasks}
+              />
+            </SortableContext>
+          </div>
+        ))}
+
+      </div>
     </div>
   );
 }

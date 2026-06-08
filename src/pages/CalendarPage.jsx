@@ -81,204 +81,117 @@ const taskDate =
     });
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 dark:text-white">
-      
-      {/* SIDEBAR */}
-      <Sidebar />
+  <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 dark:text-white">
+    <Sidebar />
 
-      {/* MAIN */}
-      <div className="flex-1 p-6">
-        
-        {/* TITLE */}
-        <h1 className="text-3xl font-bold mb-6">
-          Calendar
-        </h1>
+    <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-x-hidden">
+      {/* TITLE */}
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">
+        Calendar
+      </h1>
 
-        {/* CALENDAR */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded shadow mb-6">
-          
-         <Calendar
-  onChange={setSelectedDate}
-  value={selectedDate}
+      {/* CALENDAR */}
+      <div className="bg-white dark:bg-gray-800 p-3 sm:p-6 rounded-xl shadow mb-6 overflow-x-auto">
+        <div className="w-full flex justify-center">
+          <Calendar
+            onChange={setSelectedDate}
+            value={selectedDate}
+            className="max-w-full border-0"
+            tileClassName={({ date, view }) => {
+              if (view !== "month") return null;
 
-  tileClassName={({
-    date,
-    view,
-  }) => {
-    if (
-      view !== "month"
-    )
-      return null;
+              const formattedDate = `${date.getFullYear()}-${String(
+                date.getMonth() + 1
+              ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
-    const formattedDate =
-      `${date.getFullYear()}-${String(
-        date.getMonth() +
-          1
-      ).padStart(
-        2,
-        "0"
-      )}-${String(
-        date.getDate()
-      ).padStart(
-        2,
-        "0"
-      )}`;
+              const task = tasks.find((t) => {
+                if (!t.dueDate) return false;
 
-    const task =
-      tasks.find((t) => {
-        if (
-          !t.dueDate
-        )
-          return false;
+                const taskDate = new Date(t.dueDate);
 
-        const taskDate =
-          new Date(
-            t.dueDate
-          );
+                const formattedTask = `${taskDate.getFullYear()}-${String(
+                  taskDate.getMonth() + 1
+                ).padStart(2, "0")}-${String(taskDate.getDate()).padStart(
+                  2,
+                  "0"
+                )}`;
 
-        const formattedTask =
-          `${taskDate.getFullYear()}-${String(
-            taskDate.getMonth() +
-              1
-          ).padStart(
-            2,
-            "0"
-          )}-${String(
-            taskDate.getDate()
-          ).padStart(
-            2,
-            "0"
-          )}`;
+                return formattedTask === formattedDate;
+              });
 
-        return (
-          formattedTask ===
-          formattedDate
-        );
-      });
+              if (!task) return null;
 
-    if (!task)
-      return null;
+              const today = new Date();
+              const dueDate = new Date(task.dueDate);
 
-    const today =
-      new Date();
+              if (dueDate < today && task.status !== "done") {
+                return "calendar-overdue";
+              }
 
-    const dueDate =
-      new Date(
-        task.dueDate
-      );
+              if (task.status === "done") {
+                return "calendar-completed";
+              }
 
-    // Overdue
-    if (
-      dueDate <
-        today &&
-      task.status !==
-        "done"
-    ) {
-      return "calendar-overdue";
-    }
+              if (task.priority === "High") {
+                return "calendar-high";
+              }
 
-    // Completed
-    if (
-      task.status ===
-      "done"
-    ) {
-      return "calendar-completed";
-    }
-
-    // High Priority
-    if (
-      task.priority ===
-      "High"
-    ) {
-      return "calendar-high";
-    }
-
-    return "calendar-task";
-  }}
-/>
-        </div>
-
-        {/* TASKS */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded shadow">
-          
-          <h2 className="text-2xl font-bold mb-4">
-            Tasks on{" "}
-            {selected}
-          </h2>
-
-          {filteredTasks.length ===
-          0 ? (
-            <p className="text-gray-500">
-              No tasks for this
-              date
-            </p>
-          ) : (
-            <div className="space-y-4">
-              
-              {filteredTasks.map(
-                (task) => (
-                  <div
-                    key={
-                      task._id
-                    }
-                    className="border dark:border-gray-600 p-4 rounded"
-                  >
-                    
-                    {/* TITLE */}
-                    <h3 className="font-bold text-lg">
-                      {
-                        task.title
-                      }
-                    </h3>
-
-                    {/* DESCRIPTION */}
-                    <p className="mt-2">
-                      {
-                        task.description
-                      }
-                    </p>
-
-                    {/* ASSIGNEE */}
-                    <p className="text-sm text-gray-500 mt-2">
-                      Assignee:{" "}
-                      {task.isTeamTask
-                        ? "All Users"
-                        : task
-                            .assignee
-                            ?.name ||
-                          "Unassigned"}
-                    </p>
-
-                    {/* PRIORITY */}
-                    <p className="text-sm text-gray-500">
-                      Priority:{" "}
-                      {
-                        task.priority
-                      }
-                    </p>
-
-                    {/* STATUS */}
-                    <p className="text-sm text-gray-500">
-                      Status:{" "}
-                      {
-                        task.status
-                      }
-                    </p>
-
-                    {/* DUE DATE */}
-                    <p className="text-sm text-gray-500">
-                      Due Date:{" "}
-                      {new Date(
-                        task.dueDate
-                      ).toLocaleDateString()}
-                    </p>
-                  </div>
-                )
-              )}
-            </div>
-          )}
+              return "calendar-task";
+            }}
+          />
         </div>
       </div>
-    </div>
-  );
+
+      {/* TASK LIST */}
+      <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 break-words">
+          Tasks on {selected}
+        </h2>
+
+        {filteredTasks.length === 0 ? (
+          <p className="text-gray-500">
+            No tasks for this date
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {filteredTasks.map((task) => (
+              <div
+                key={task._id}
+                className="border dark:border-gray-600 p-4 rounded-lg"
+              >
+                <h3 className="font-bold text-lg break-words">
+                  {task.title}
+                </h3>
+
+                <p className="mt-2 break-words">
+                  {task.description}
+                </p>
+
+                <p className="text-sm text-gray-500 mt-2 break-words">
+                  Assignee:{" "}
+                  {task.isTeamTask
+                    ? "All Users"
+                    : task.assignee?.name || "Unassigned"}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  Priority: {task.priority}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  Status: {task.status}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  Due Date:{" "}
+                  {new Date(task.dueDate).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
+  </div>
+);
 }

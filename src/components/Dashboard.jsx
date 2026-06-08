@@ -12,61 +12,32 @@ import {
   Legend,
 } from "recharts";
 
-export default function Dashboard({
-  data,
-}) {
-  // TOTALS
-  const todo =
-    data.columns.todo.length;
-
+export default function Dashboard({ data }) {
+  const todo = data?.columns?.todo?.length || 0;
   const progress =
-    data.columns.progress.length;
-
+    data?.columns?.progress?.length || 0;
   const review =
-    data.columns.review.length;
-
+    data?.columns?.review?.length || 0;
   const done =
-    data.columns.done.length;
+    data?.columns?.done?.length || 0;
 
-  // PIE DATA
   const pieData = [
-    {
-      name: "To Do",
-      value: todo,
-    },
-
-    {
-      name: "Progress",
-      value: progress,
-    },
-
-    {
-      name: "Review",
-      value: review,
-    },
-
-    {
-      name: "Done",
-      value: done,
-    },
+    { name: "To Do", value: todo },
+    { name: "Progress", value: progress },
+    { name: "Review", value: review },
+    { name: "Done", value: done },
   ];
 
-  // BAR DATA
   const barData = [
     {
       name: "Tasks",
-
       todo,
-
       progress,
-
       review,
-
       done,
     },
   ];
 
-  // COLORS
   const COLORS = [
     "#3b82f6",
     "#f59e0b",
@@ -75,153 +46,159 @@ export default function Dashboard({
   ];
 
   return (
-    <div className="p-6">
-      
-      {/* STATS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        
-        {/* TODO */}
-        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded shadow">
-          
-          <h2 className="text-lg font-semibold">
-            To Do
-          </h2>
+    <div className="space-y-6 w-full">
 
-          <p className="text-3xl font-bold mt-2">
+      {/* STATS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+          <h3 className="text-gray-500 dark:text-gray-400">
+            To Do
+          </h3>
+          <p className="text-3xl font-bold text-blue-500">
             {todo}
           </p>
         </div>
 
-        {/* PROGRESS */}
-        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded shadow">
-          
-          <h2 className="text-lg font-semibold">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+          <h3 className="text-gray-500 dark:text-gray-400">
             In Progress
-          </h2>
-
-          <p className="text-3xl font-bold mt-2">
+          </h3>
+          <p className="text-3xl font-bold text-yellow-500">
             {progress}
           </p>
         </div>
 
-        {/* REVIEW */}
-        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded shadow">
-          
-          <h2 className="text-lg font-semibold">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+          <h3 className="text-gray-500 dark:text-gray-400">
             Review
-          </h2>
-
-          <p className="text-3xl font-bold mt-2">
+          </h3>
+          <p className="text-3xl font-bold text-purple-500">
             {review}
           </p>
         </div>
 
-        {/* DONE */}
-        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded shadow">
-          
-          <h2 className="text-lg font-semibold">
-            Done
-          </h2>
-
-          <p className="text-3xl font-bold mt-2">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+          <h3 className="text-gray-500 dark:text-gray-400">
+            Completed
+          </h3>
+          <p className="text-3xl font-bold text-green-500">
             {done}
           </p>
         </div>
+
       </div>
 
       {/* CHARTS */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
         {/* PIE CHART */}
-        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded shadow">
-          
-          <h2 className="text-xl font-bold mb-4">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow min-w-0">
+
+          <h2 className="text-xl font-semibold mb-4">
             Task Distribution
           </h2>
 
-          <ResponsiveContainer
-            width="100%"
-            height={300}
+          <div
+            style={{
+              width: "100%",
+              height: "320px",
+              minWidth: 0,
+            }}
           >
-            <PieChart>
-              
-              <Pie
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                dataKey="value"
-                label
-              >
-                {pieData.map(
-                  (
-                    entry,
-                    index
-                  ) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={
-                        COLORS[
-                          index %
-                            COLORS.length
-                        ]
-                      }
-                    />
-                  )
-                )}
-              </Pie>
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+            >
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  outerRadius={100}
+                  label
+                >
+                  {pieData.map(
+                    (entry, index) => (
+                      <Cell
+                        key={index}
+                        fill={
+                          COLORS[
+                            index %
+                              COLORS.length
+                          ]
+                        }
+                      />
+                    )
+                  )}
+                </Pie>
 
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
         </div>
 
         {/* BAR CHART */}
-        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded shadow">
-          
-          <h2 className="text-xl font-bold mb-4">
-            Task Analytics
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow min-w-0">
+
+          <h2 className="text-xl font-semibold mb-4">
+            Task Status Overview
           </h2>
 
-          <ResponsiveContainer
-            width="100%"
-            height={300}
+          <div
+            style={{
+              width: "100%",
+              height: "320px",
+              minWidth: 0,
+            }}
           >
-            <BarChart data={barData}>
-              
-              <CartesianGrid strokeDasharray="3 3" />
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+            >
+              <BarChart
+                data={barData}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
 
-              <XAxis dataKey="name" />
+                <XAxis dataKey="name" />
 
-              <YAxis />
+                <YAxis />
 
-              <Tooltip />
+                <Tooltip />
 
-              <Legend />
+                <Legend />
 
-              <Bar
-                dataKey="todo"
-                fill="#3b82f6"
-              />
+                <Bar
+                  dataKey="todo"
+                  fill="#3b82f6"
+                />
 
-              <Bar
-                dataKey="progress"
-                fill="#f59e0b"
-              />
+                <Bar
+                  dataKey="progress"
+                  fill="#f59e0b"
+                />
 
-              <Bar
-                dataKey="review"
-                fill="#8b5cf6"
-              />
+                <Bar
+                  dataKey="review"
+                  fill="#8b5cf6"
+                />
 
-              <Bar
-                dataKey="done"
-                fill="#10b981"
-              />
-            </BarChart>
-          </ResponsiveContainer>
+                <Bar
+                  dataKey="done"
+                  fill="#10b981"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
         </div>
+
       </div>
+
     </div>
   );
 }

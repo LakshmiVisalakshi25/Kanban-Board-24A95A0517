@@ -167,7 +167,7 @@ export default function DashboardPage() {
       <Sidebar />
 
       {/* MAIN */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 min-w-0 overflow-x-hidden pt-20 md:pt-0 p-3 sm:p-4 md:p-6">
 
         <h1 className="text-3xl font-bold mb-6">
           Dashboard

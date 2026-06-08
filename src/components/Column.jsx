@@ -9,51 +9,81 @@ export default function Column({
   filters,
   fetchTasks,
 }) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: column.id,
-  });
+  const { setNodeRef, isOver } =
+    useDroppable({
+      id: column.id,
+    });
 
   const filtered = tasks.filter(
     (t) =>
       (!filters.search ||
         t.title
           .toLowerCase()
-          .includes(filters.search.toLowerCase())) &&
+          .includes(
+            filters.search.toLowerCase()
+          )) &&
       (!filters.assignee ||
-        t.assignee === filters.assignee) &&
+        t.assignee?.name ===
+          filters.assignee) &&
       (!filters.priority ||
-        t.priority === filters.priority)
+        t.priority ===
+          filters.priority)
   );
 
   return (
     <div
       ref={setNodeRef}
-      className={`bg-gray-50 dark:bg-gray-800 rounded p-3 min-h-[200px] transition-all duration-300 ${
-        isOver
-          ? "ring-4 ring-blue-400 bg-blue-50 dark:bg-gray-700"
-          : ""
-      }`}
+      className={`
+        bg-white
+        dark:bg-gray-800
+        rounded-2xl
+        p-4
+        shadow-lg
+        min-h-[70vh]
+        border
+        border-gray-200
+        dark:border-gray-700
+        transition-all duration-300
+        ${
+          isOver
+            ? "ring-4 ring-blue-400"
+            : ""
+        }
+      `}
     >
-      <h2 className="font-bold mb-2 dark:text-white">
-        {column.title} ({filtered.length})
-      </h2>
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="font-bold text-xl text-gray-800 dark:text-white">
+          {column.title}
+        </h2>
 
+        <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+          {filtered.length}
+        </span>
+      </div>
+
+      {/* EMPTY */}
       {filtered.length === 0 && (
-        <p className="text-center text-gray-400 text-sm py-6">
-          Drop tasks here
-        </p>
+        <div className="flex items-center justify-center min-h-[250px]">
+          <p className="text-gray-400">
+            Drop tasks here
+          </p>
+        </div>
       )}
 
-      {filtered.map((task) => (
-        <TaskCard
-          key={task._id}
-          task={task}
-          columnId={column.id}
-          data={data}
-          setData={setData}
-          fetchTasks={fetchTasks}
-        />
-      ))}
+      {/* TASKS */}
+      <div className="space-y-4">
+        {filtered.map((task) => (
+          <TaskCard
+            key={task._id}
+            task={task}
+            columnId={column.id}
+            data={data}
+            setData={setData}
+            fetchTasks={fetchTasks}
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -11,26 +11,31 @@ export default function TaskModal({
   fetchTasks,
   onClose,
 }) {
-  // COLUMNS
   const columns = [
     { id: "todo", title: "To Do" },
-    { id: "progress", title: "In Progress" },
-    { id: "review", title: "Review" },
-    { id: "done", title: "Done" },
+    {
+      id: "progress",
+      title: "In Progress",
+    },
+    {
+      id: "review",
+      title: "Review",
+    },
+    {
+      id: "done",
+      title: "Done",
+    },
   ];
 
-  // PRIORITIES
   const priorities = [
     "Low",
     "Medium",
     "High",
   ];
 
-  // USERS
   const [users, setUsers] =
     useState([]);
 
-  // FORM STATES
   const [title, setTitle] =
     useState(
       task?.title || ""
@@ -78,7 +83,6 @@ export default function TaskModal({
   const [error, setError] =
     useState("");
 
-  // FETCH USERS
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -95,7 +99,6 @@ export default function TaskModal({
     }
   }
 
-  // SUBMIT
   async function handleSubmit(
     e
   ) {
@@ -103,7 +106,6 @@ export default function TaskModal({
 
     setError("");
 
-    // VALIDATION
     if (
       !title.trim() ||
       !description.trim() ||
@@ -132,12 +134,10 @@ export default function TaskModal({
 
         status: column,
 
-        // TEAM TASK
         isTeamTask:
           assignee ===
           "team",
 
-        // USER TASK
         assignee:
           assignee ===
           "team"
@@ -145,7 +145,6 @@ export default function TaskModal({
             : assignee,
       };
 
-      // CREATE
       if (!task) {
         await API.post(
           "/tasks",
@@ -155,10 +154,7 @@ export default function TaskModal({
         toast.success(
           "Task Added Successfully"
         );
-      }
-
-      // UPDATE
-      else {
+      } else {
         await API.put(
           `/tasks/${task._id}`,
           taskData
@@ -170,7 +166,6 @@ export default function TaskModal({
       }
 
       fetchTasks();
-
       onClose();
     } catch (error) {
       console.log(error);
@@ -184,22 +179,35 @@ export default function TaskModal({
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
 
       <form
         onSubmit={
           handleSubmit
         }
-        className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded shadow-lg w-96"
-      >
+        className="
+          bg-white
+          dark:bg-gray-800
+          dark:text-white
+          rounded-xl
+          shadow-xl
 
-        <h2 className="text-xl font-bold mb-4">
+          w-full
+          max-w-xl
+
+          max-h-[90vh]
+          overflow-y-auto
+
+          p-4
+          sm:p-6
+        "
+      >
+        <h2 className="text-xl sm:text-2xl font-bold mb-4">
           {isNew
             ? "Add Task"
             : "Edit Task"}
         </h2>
 
-        {/* ERROR */}
         {error && (
           <p className="text-red-500 mb-3">
             {error}
@@ -207,7 +215,7 @@ export default function TaskModal({
         )}
 
         {/* TITLE */}
-        <div className="mb-3">
+        <div className="mb-4">
           <label className="block mb-1 font-medium">
             Title
           </label>
@@ -221,19 +229,19 @@ export default function TaskModal({
                 e.target.value
               )
             }
-            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg"
           />
         </div>
 
         {/* DESCRIPTION */}
-        <div className="mb-3">
+        <div className="mb-4">
           <label className="block mb-1 font-medium">
             Description
           </label>
 
           <textarea
             required
-            rows={3}
+            rows={4}
             value={
               description
             }
@@ -242,12 +250,12 @@ export default function TaskModal({
                 e.target.value
               )
             }
-            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg resize-none"
           />
         </div>
 
         {/* ASSIGNEE */}
-        <div className="mb-3">
+        <div className="mb-4">
           <label className="block mb-1 font-medium">
             Assignee
           </label>
@@ -260,7 +268,7 @@ export default function TaskModal({
                 e.target.value
               )
             }
-            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg"
           >
             <option value="">
               Select Assignee
@@ -288,7 +296,7 @@ export default function TaskModal({
         </div>
 
         {/* PRIORITY */}
-        <div className="mb-3">
+        <div className="mb-4">
           <label className="block mb-1 font-medium">
             Priority
           </label>
@@ -302,7 +310,7 @@ export default function TaskModal({
                 e.target.value
               )
             }
-            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg"
           >
             {priorities.map(
               (p) => (
@@ -318,7 +326,7 @@ export default function TaskModal({
         </div>
 
         {/* DUE DATE */}
-        <div className="mb-3">
+        <div className="mb-4">
           <label className="block mb-1 font-medium">
             Due Date
           </label>
@@ -332,12 +340,12 @@ export default function TaskModal({
                 e.target.value
               )
             }
-            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg"
           />
         </div>
 
         {/* STATUS */}
-        <div className="mb-4">
+        <div className="mb-6">
           <label className="block mb-1 font-medium">
             Column
           </label>
@@ -349,7 +357,7 @@ export default function TaskModal({
                 e.target.value
               )
             }
-            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
+            className="w-full border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 rounded-lg"
           >
             {columns.map(
               (col) => (
@@ -371,26 +379,40 @@ export default function TaskModal({
         </div>
 
         {/* BUTTONS */}
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-col sm:flex-row justify-end gap-3">
 
           <button
             type="button"
             onClick={
               onClose
             }
-            className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-600"
+            className="
+              w-full sm:w-auto
+              px-5 py-2
+              rounded-lg
+              bg-gray-300
+              dark:bg-gray-600
+            "
           >
             Cancel
           </button>
 
           <button
             type="submit"
-            className="px-4 py-2 rounded bg-blue-500 hover:bg-blue-600 text-white"
+            className="
+              w-full sm:w-auto
+              px-5 py-2
+              rounded-lg
+              bg-blue-500
+              hover:bg-blue-600
+              text-white
+            "
           >
             {isNew
-              ? "Add"
-              : "Save"}
+              ? "Add Task"
+              : "Save Changes"}
           </button>
+
         </div>
       </form>
     </div>

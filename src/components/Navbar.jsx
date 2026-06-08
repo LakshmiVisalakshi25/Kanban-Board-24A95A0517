@@ -2,93 +2,166 @@ export default function Navbar({
   filters,
   setFilters,
   onAdd,
+  users = [],
 }) {
-  // USER
   const user = JSON.parse(
     localStorage.getItem("user")
   );
 
   return (
-    <div className="bg-white dark:bg-gray-800 dark:text-white p-4 flex flex-wrap gap-4 shadow items-center">
-      
-      {/* SEARCH */}
-      <input
-        className="border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 flex-1 rounded"
-        placeholder="Search tasks"
-        value={filters.search}
-        onChange={(e) =>
-          setFilters({
-            ...filters,
-            search: e.target.value,
-          })
-        }
-      />
+    <div className="bg-white dark:bg-gray-800 dark:text-white shadow p-4 rounded-xl">
 
-      {/* ASSIGNEE */}
-      <select
-        className="border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
-        onChange={(e) =>
-          setFilters({
-            ...filters,
-            assignee: e.target.value,
-          })
-        }
-      >
-        <option value="">
-          All Assignees
-        </option>
+      <div className="flex flex-col gap-4">
 
-        <option value="Lakshmi Visalakshi">
-          Lakshmi Visalakshi
-        </option>
+        {/* SEARCH */}
+        <input
+          type="text"
+          placeholder="Search tasks..."
+          value={filters.search}
+          onChange={(e) =>
+            setFilters({
+              ...filters,
+              search: e.target.value,
+            })
+          }
+          className="
+            w-full
+            border
+            dark:border-gray-600
+            dark:bg-gray-700
+            dark:text-white
+            p-3
+            rounded-lg
+            focus:outline-none
+            focus:ring-2
+            focus:ring-blue-500
+          "
+        />
 
-        <option value="Admin">
-          Admin
-        </option>
-      </select>
+        {/* FILTERS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
-      {/* PRIORITY */}
-      <select
-        className="border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-2 rounded"
-        onChange={(e) =>
-          setFilters({
-            ...filters,
-            priority: e.target.value,
-          })
-        }
-      >
-        <option value="">
-          All Priority
-        </option>
+          {/* ASSIGNEE */}
+          <select
+            value={filters.assignee}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                assignee: e.target.value,
+              })
+            }
+            className="
+              w-full
+              border
+              dark:border-gray-600
+              dark:bg-gray-700
+              dark:text-white
+              p-3
+              rounded-lg
+            "
+          >
+            <option value="">
+              All Assignees
+            </option>
 
-        <option value="Low">
-          Low
-        </option>
+            {users.map((u) => (
+              <option
+                key={u._id}
+                value={u.name}
+              >
+                {u.name}
+              </option>
+            ))}
+          </select>
 
-        <option value="Medium">
-          Medium
-        </option>
+          {/* PRIORITY */}
+          <select
+            value={filters.priority}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                priority: e.target.value,
+              })
+            }
+            className="
+              w-full
+              border
+              dark:border-gray-600
+              dark:bg-gray-700
+              dark:text-white
+              p-3
+              rounded-lg
+            "
+          >
+            <option value="">
+              All Priority
+            </option>
 
-        <option value="High">
-          High
-        </option>
-      </select>
+            <option value="Low">
+              Low
+            </option>
 
-      {/* USER */}
-      <div className="font-semibold">
-        Welcome, {user?.name} (
-        {user?.role || "member"})
+            <option value="Medium">
+              Medium
+            </option>
+
+            <option value="High">
+              High
+            </option>
+          </select>
+
+        </div>
+
+        {/* DESKTOP ONLY */}
+        <div className="hidden md:flex justify-between items-center">
+
+          <div className="text-sm font-medium">
+            Welcome,{" "}
+            <span className="font-bold">
+              {user?.name}
+            </span>
+          </div>
+
+          {user?.role === "admin" && (
+            <button
+              onClick={onAdd}
+              className="
+                bg-blue-600
+                hover:bg-blue-700
+                text-white
+                px-5
+                py-2.5
+                rounded-lg
+                transition
+              "
+            >
+              + Add Task
+            </button>
+          )}
+        </div>
+
+        {/* MOBILE ONLY */}
+        {user?.role === "admin" && (
+          <button
+            onClick={onAdd}
+            className="
+              md:hidden
+              w-full
+              bg-blue-600
+              hover:bg-blue-700
+              text-white
+              px-5
+              py-3
+              rounded-lg
+              transition
+            "
+          >
+            + Add Task
+          </button>
+        )}
+
       </div>
 
-      {/* ADD TASK - ADMIN ONLY */}
-      {user?.role === "admin" && (
-        <button
-          onClick={onAdd}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
-        >
-          + Add Task
-        </button>
-      )}
     </div>
   );
 }

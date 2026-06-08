@@ -34,7 +34,9 @@ export default function AnalyticsPage() {
       };
 
       tasks.forEach((task) => {
-        grouped[task.status].push(task);
+        if (grouped[task.status]) {
+          grouped[task.status].push(task);
+        }
       });
 
       setData({
@@ -51,16 +53,30 @@ export default function AnalyticsPage() {
       {/* SIDEBAR */}
       <Sidebar />
 
-      {/* MAIN */}
-      <div className="flex-1 p-6">
-        
-        <h1 className="text-3xl font-bold mb-6">
-          Analytics
-        </h1>
+      {/* MAIN CONTENT */}
+      <main className="flex-1 min-w-0 overflow-x-hidden pt-20 md:pt-0">
 
-        {/* ANALYTICS */}
-        <Dashboard data={data} />
-      </div>
+        <div className="p-3 sm:p-4 md:p-6 lg:p-8">
+
+          {/* PAGE HEADER */}
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
+              Analytics
+            </h1>
+
+            <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm sm:text-base">
+              Track task distribution, workflow progress, and productivity insights.
+            </p>
+          </div>
+
+          {/* DASHBOARD */}
+          <div className="w-full">
+            <Dashboard data={data} />
+          </div>
+
+        </div>
+
+      </main>
     </div>
   );
 }
