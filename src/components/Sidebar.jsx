@@ -25,6 +25,17 @@ export default function Sidebar() {
     return localStorage.getItem("theme") === "dark";
   });
 
+  // Set --vh CSS variable to fix mobile browser address bar issue
+  useEffect(() => {
+    const setVh = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty("--vh", `${vh}px`);
+    };
+    setVh();
+    window.addEventListener("resize", setVh);
+    return () => window.removeEventListener("resize", setVh);
+  }, []);
+
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
@@ -86,15 +97,21 @@ export default function Sidebar() {
   const SidebarContent = ({ onClose }) => (
     <div
       style={{
-        height: "100vh",
+        // Use --vh variable which equals actual visible height on mobile
+        // Falls back to 100vh on desktop where it works fine
+        height: "calc(var(--vh, 1vh) * 100)",
         backgroundColor: "#111827",
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden", // prevent the container itself from scrolling
       }}
       className="text-white w-64"
     >
-      {/* TOP: Logo + Close */}
-      <div className="flex items-center justify-between px-5 py-5 flex-shrink-0">
+      {/* TOP: Logo + Close — fixed height, never shrinks */}
+      <div
+        style={{ flexShrink: 0 }}
+        className="flex items-center justify-between px-5 py-5"
+      >
         <h1 className="text-xl font-bold tracking-tight">Kanban SaaS</h1>
         {onClose && (
           <button
@@ -107,10 +124,17 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* MIDDLE: Nav links — only this section scrolls if needed */}
+      {/* MIDDLE: Nav links — takes all remaining space, scrolls if needed */}
       <nav
-        style={{ flex: 1, overflowY: "auto" }}
-        className="px-5 pb-4 space-y-1"
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          // Hide scrollbar visually but keep functionality
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
+        className="px-5 space-y-1 pb-2"
       >
         {navLinks.map(({ to, icon, label }) => (
           <Link key={to} to={to} className={menuStyle(to)}>
@@ -120,13 +144,13 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* BOTTOM: Always pinned — never scrolls away */}
+      {/* BOTTOM: Dark mode + Logout — fixed height, always visible */}
       <div
         style={{
-          flexShrink: 0,
+          flexShrink: 0,        // NEVER shrink — always stays at bottom
           backgroundColor: "#111827",
           borderTop: "1px solid #374151",
-          padding: "16px 20px",
+          padding: "12px 20px",
         }}
         className="space-y-1"
       >
@@ -187,7 +211,8 @@ export default function Sidebar() {
           left: 0,
           zIndex: 60,
           width: "256px",
-          height: "100vh",
+          // Use --vh here too so drawer matches actual screen height
+          height: "calc(var(--vh, 1vh) * 100)",
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.3s ease-in-out",
         }}
