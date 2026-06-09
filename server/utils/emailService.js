@@ -1,16 +1,19 @@
-import * as Brevo from "@getbrevo/brevo";
+const SibApiV3Sdk = require("sib-api-v3-sdk");
 
-const apiInstance = new Brevo.TransactionalEmailsApi();
-apiInstance.authentications["apiKey"].apiKey = process.env.BREVO_API_KEY;
+const client = SibApiV3Sdk.ApiClient.instance;
+const apiKey = client.authentications["api-key"];
+apiKey.apiKey = process.env.BREVO_API_KEY;
 
-export async function sendOTPEmail(toEmail, otp) {
-  const sendSmtpEmail = new Brevo.SendSmtpEmail();
+const transactionalApi = new SibApiV3Sdk.TransactionalEmailsApi();
+
+async function sendOTP(toEmail, otp) {
+  const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
   sendSmtpEmail.subject = "Password Reset OTP - Kanban Board";
   sendSmtpEmail.to = [{ email: toEmail }];
-  sendSmtpEmail.sender = { 
-    name: "Kanban Board", 
-    email: process.env.BREVO_SENDER_EMAIL  // must be verified in Brevo
+  sendSmtpEmail.sender = {
+    name: "Kanban Board",
+    email: process.env.BREVO_SENDER_EMAIL,
   };
   sendSmtpEmail.htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 400px; margin: auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 10px;">
@@ -24,5 +27,7 @@ export async function sendOTPEmail(toEmail, otp) {
     </div>
   `;
 
-  await apiInstance.sendTransacEmail(sendSmtpEmail);
+  await transactionalApi.sendTransacEmail(sendSmtpEmail);
 }
+
+module.exports = { sendOTP };
